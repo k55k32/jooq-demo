@@ -22,6 +22,7 @@ import diamond.jooq.demo.model.jooq.tables.User;
 import diamond.jooq.demo.model.jooq.tables.pojos.ArticlePojo;
 import diamond.jooq.demo.model.jooq.tables.pojos.UserPojo;
 import diamond.jooq.demo.model.jooq.tables.records.ArticleRecord;
+import diamond.jooq.demo.model.jooq.tables.records.UserRecord;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = App.class)
@@ -104,5 +105,42 @@ public class JooqDemoTest {
         });
         Assert.assertEquals(joinArticle.getUsername(), user.getUsername());
         Assert.assertEquals(joinArticle.getNickname(), user.getNickname());
+    }
+
+    @Test
+    public void updateNotNull(){
+        UserPojo user = saveUser();
+        String oldNickname = user.getNickname();
+        User userTable = Tables.USER;
+        UserRecord record = context.newRecord(userTable, user);
+        record.setNickname(null);
+        String newEmail = "email@email.com";
+        record.setEmail(newEmail);
+        for (int i = 0;i < record.size(); i++) {
+            if (record.getValue(i) == null) {
+                record.changed(i, false);
+            }
+        }
+        record.update();
+        UserPojo updateUser = context.select().from(Tables.USER).where(Tables.USER.ID.eq(user.getId())).fetchOneInto(UserPojo.class);
+        Assert.assertEquals(updateUser.getNickname(), oldNickname);
+        Assert.assertEquals(updateUser.getEmail(), newEmail);
+    }
+
+    @Test
+    public void updateOnlyOneFiled() {
+        UserPojo user = saveUser();
+        User userTable = Tables.USER;
+        UserRecord record = context.newRecord(userTable, user);
+        record.setNickname(null);
+        record.setEmail("email@email.com123");
+        for (int i = 0;i < record.size(); i++) {
+            record.changed(i, false);
+        }
+        record.changed(userTable.NICKNAME);
+        record.update();
+        UserPojo updateUser = context.select().from(Tables.USER).where(Tables.USER.ID.eq(user.getId())).fetchOneInto(UserPojo.class);
+        Assert.assertEquals(updateUser.getNickname(), null);
+        Assert.assertEquals(updateUser.getEmail(), user.getEmail());
     }
 }
