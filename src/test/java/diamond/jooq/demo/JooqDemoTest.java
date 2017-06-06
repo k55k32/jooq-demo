@@ -34,7 +34,15 @@ public class JooqDemoTest {
 
     @Test
     public void insertUserTest(){
-        saveUser();
+        UserPojo user = new UserPojo();
+        String userId = UUID.randomUUID().toString();
+        user.setId(userId);
+        user.setUsername("test user");
+        user.setPassword("test password");
+        user.setEmail("emailtest@test.com");
+        context.newRecord(Tables.USER, user).store();
+        UserPojo saveUser = context.select().from(Tables.USER).where(Tables.USER.ID.eq(userId)).fetchOneInto(UserPojo.class);
+        Assert.assertTrue(saveUser.getId().equals(user.getId()));
     }
 
     public UserPojo saveUser(){
@@ -66,7 +74,16 @@ public class JooqDemoTest {
 
     @Test
     public void selectArticleTest() {
-        saveArticle();
+        UserPojo user = saveUser();
+        ArticlePojo article = new ArticlePojo();
+        article.setUserId(user.getId());
+        String articleId = UUID.randomUUID().toString();
+        article.setId(articleId);
+        article.setTitle("test title");
+        article.setContent("test article content");
+        context.newRecord(Tables.ARTICLE, article).store();
+        ArticlePojo saveArticle = context.select().from(Tables.ARTICLE).where(Tables.ARTICLE.ID.eq(articleId)).fetchOneInto(ArticlePojo.class);
+        Assert.assertTrue(saveArticle.getId().equals(articleId));
     }
 
     @Test
